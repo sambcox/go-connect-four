@@ -25,7 +25,7 @@ The goal of this project was to take something that I was familiar with from Rub
 3. Navigate to the project directory:
 
     ```bash
-    cd your-repo
+    cd go-connect-four
     ```
 
 4. Run the game:
