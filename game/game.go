@@ -39,9 +39,21 @@ func (g *Game) MainMenu() {
 
 func (g *Game) TwoPlayerStart() {
 	fmt.Println("Please enter player 1 name")
-	g.Player1 = player.NewPlayer(g.getUserInput())
+	player1, err := player.NewPlayer(g.getUserInput())
+	if err != nil {
+		fmt.Println("Error creating player 1:", err)
+		return
+	}
+	g.Player1 = player1
+
 	fmt.Println("Please enter player 2 name")
-	g.Player2 = player.NewPlayer(g.getUserInput())
+	player2, err := player.NewPlayer(g.getUserInput())
+	if err != nil {
+		fmt.Println("Error creating player 2:", err)
+		return
+	}
+	g.Player2 = player2
+
 	board := board.NewBoard()
 	g.Board = &board
 	g.Turn = turn.NewTurn(g.Board)
@@ -64,7 +76,7 @@ func (g *Game) GameUserTakeTurn() {
 		g.DrawGame()
 	}
 	fmt.Println("--------------------------------")
-	g.Turn.UserTakeTurn()
+	g.Turn.TakeTurn(false)
 	fmt.Println("--------------------------------")
 	g.Board.PrintBoard()
 	g.GamePCTakeTurn()
@@ -91,7 +103,7 @@ func (g *Game) Player1TakeTurn() {
 	fmt.Println("--------------------------------")
 	fmt.Printf("%s, your turn\n", g.Player1.Name)
 	fmt.Println("--------------------------------")
-	g.Turn.UserTakeTurn()
+	g.Turn.TakeTurn(false)
 	g.Board.PrintBoard()
 	g.Player2TakeTurn()
 }
@@ -105,7 +117,7 @@ func (g *Game) Player2TakeTurn() {
 	fmt.Println("--------------------------------")
 	fmt.Printf("%s, your turn\n", g.Player2.Name)
 	fmt.Println("--------------------------------")
-	g.Turn.TwoPlayerTakeTurn()
+	g.Turn.TakeTurn(true)
 	g.Board.PrintBoard()
 	g.Player1TakeTurn()
 }

@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const validColumns = "ABCDEFG"
+
 type Turn struct {
 	Board *board.Board
 }
@@ -18,25 +20,20 @@ func NewTurn(board *board.Board) *Turn {
 	}
 }
 
-func (t *Turn) UserTakeTurn() {
-	fmt.Print("Please enter a letter between A and G: ")
-	userInput := getUserInput()
-	if strings.Contains("ABCDEFG", strings.ToUpper(userInput)) {
-		t.UserPlacePiece(strings.ToUpper(userInput))
-	} else {
-		fmt.Println("That is an invalid input! Please select a letter between A and G.")
-		t.UserTakeTurn()
-	}
-}
-
-func (t *Turn) TwoPlayerTakeTurn() {
-	fmt.Print("Please enter a letter between A and G: ")
-	userInput := getUserInput()
-	if strings.Contains("ABCDEFG", strings.ToUpper(userInput)) {
-		t.PlacePiece(strings.ToUpper(userInput))
-	} else {
-		fmt.Println("That is an invalid input! Please select a letter between A and G.")
-		t.TwoPlayerTakeTurn()
+func (t *Turn) TakeTurn(isPlayerTwo bool) {
+	for {
+		fmt.Print("Please enter a letter between A and G: ")
+		userInput := getUserInput()
+		if strings.Contains(validColumns, strings.ToUpper(userInput)) {
+			if isPlayerTwo {
+				t.PlacePiece(strings.ToUpper(userInput), "user2")
+			} else {
+				t.PlacePiece(strings.ToUpper(userInput), "user")
+			}
+			break
+		} else {
+			fmt.Println("That is an invalid input! Please select a letter between A and G.")
+		}
 	}
 }
 
@@ -45,44 +42,27 @@ func (t *Turn) ComputerTakeTurn() {
 	columns := []string{"A", "B", "C", "D", "E", "F", "G"}
 	shuffledColumns := shuffle(columns)
 	computerInput := shuffledColumns[0]
-	t.PCPlacePiece(computerInput)
+	t.PlacePiece(computerInput, "computer")
 }
 
-func (t *Turn) UserPlacePiece(columnInputted string) {
+func (t *Turn) PlacePiece(columnInputted string, pieceType string) {
 	if !t.Board.Columns[columnInputted][5].IsEmpty() {
 		fmt.Println("That column is full! Please select another.")
-		t.TwoPlayerTakeTurn()
-	} else {
-		for i, cell := range t.Board.Columns[columnInputted] {
-			if cell.IsEmpty() {
-				t.Board.Columns[columnInputted][i].AddPiece()
-				break
-			}
+		if pieceType == "user" {
+			t.TakeTurn(false)
+		} else if pieceType == "computer" {
+			t.ComputerTakeTurn()
+		} else if pieceType == "user2" {
+			t.TakeTurn(true)
 		}
-	}
-}
-
-func (t *Turn) PCPlacePiece(columnInputted string) {
-	if !t.Board.Columns[columnInputted][5].IsEmpty() {
-		t.ComputerTakeTurn()
 	} else {
 		for i, cell := range t.Board.Columns[columnInputted] {
 			if cell.IsEmpty() {
-				t.Board.Columns[columnInputted][i].ComputerAddPiece()
-				break
-			}
-		}
-	}
-}
-
-func (t *Turn) PlacePiece(columnInputted string) {
-	if !t.Board.Columns[columnInputted][5].IsEmpty() {
-		fmt.Println("That column is full! Please select another.")
-		t.UserTakeTurn()
-	} else {
-		for i, cell := range t.Board.Columns[columnInputted] {
-			if cell.IsEmpty() {
-				t.Board.Columns[columnInputted][i].ComputerAddPiece()
+				if pieceType == "user" {
+					t.Board.Columns[columnInputted][i].AddPiece()
+				} else if pieceType == "computer" || pieceType == "user2" {
+					t.Board.Columns[columnInputted][i].ComputerAddPiece()
+				}
 				break
 			}
 		}
