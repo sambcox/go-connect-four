@@ -28,7 +28,7 @@ func (b *Board) initializeColumns() {
 }
 
 func (b *Board) PrintBoard() {
-	fmt.Println("  A B C D E F G")
+	fmt.Println("A B C D E F G")
 	for row := 5; row >= 0; row-- {
 		for _, column := range []string{"A", "B", "C", "D", "E", "F", "G"} {
 			fmt.Printf("%s ", b.Columns[column][row].Piece)
