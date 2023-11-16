@@ -5,6 +5,8 @@ import (
 	"github.com/sambcox/go-connect-four/cell"
 )
 
+var columns = []string{"A", "B", "C", "D", "E", "F", "G"}
+
 type Board struct {
 	Columns map[string][]cell.Cell
 }
@@ -18,7 +20,7 @@ func NewBoard() Board {
 }
 
 func (b *Board) initializeColumns() {
-	for _, column := range []string{"A", "B", "C", "D", "E", "F", "G"} {
+	for _, column := range columns {
 		var cells []cell.Cell
 		for i := 0; i < 6; i++ {
 			cells = append(cells, cell.NewCell())
@@ -30,7 +32,7 @@ func (b *Board) initializeColumns() {
 func (b *Board) PrintBoard() {
 	fmt.Println("A B C D E F G")
 	for row := 5; row >= 0; row-- {
-		for _, column := range []string{"A", "B", "C", "D", "E", "F", "G"} {
+		for _, column := range columns {
 			fmt.Printf("%s ", b.Columns[column][row].Piece)
 		}
 		fmt.Println()
@@ -40,55 +42,51 @@ func (b *Board) PrintBoard() {
 func (b *Board) HorizontalWin() string {
 	for row := 0; row < 6; row++ {
 		consecutive := []string{}
-		for _, column := range []string{"A", "B", "C", "D", "E", "F", "G"} {
+		for _, column := range columns {
 			consecutive = append(consecutive, b.Columns[column][row].Piece)
-		}
-		if containsWin(consecutive) {
-			return consecutive[0]
+			if len(consecutive) >= 4 && containsWin(consecutive[len(consecutive)-4:]) {
+				return consecutive[0]
+			}
 		}
 	}
 	return ""
 }
 
 func (b *Board) VerticalWin() string {
-	for _, column := range []string{"A", "B", "C", "D", "E", "F", "G"} {
+	for _, column := range columns {
 		consecutive := []string{}
 		for row := 0; row < 6; row++ {
 			consecutive = append(consecutive, b.Columns[column][row].Piece)
-		}
-		if containsWin(consecutive) {
-			return consecutive[0]
+			if len(consecutive) >= 4 && containsWin(consecutive[len(consecutive)-4:]) {
+				return consecutive[0]
+			}
 		}
 	}
 	return ""
 }
 
 func (b *Board) DiagonalWin() string {
-	consecutiveDiagonals := [][]string{}
-
 	for startRow := 0; startRow <= 2; startRow++ {
 		for startCol := 0; startCol <= 3; startCol++ {
-			var diagonal []string
+			consecutive := []string{}
 			for i := 0; i < 4; i++ {
-				diagonal = append(diagonal, b.Columns[getColumnKey(startCol+i)][startRow+i].Piece)
+				consecutive = append(consecutive, b.Columns[columns[startCol+i]][startRow+i].Piece)
+				if len(consecutive) == 4 && containsWin(consecutive) {
+					return consecutive[0]
+				}
 			}
-			consecutiveDiagonals = append(consecutiveDiagonals, diagonal)
 		}
 	}
 
 	for startRow := 0; startRow <= 2; startRow++ {
 		for startCol := 3; startCol <= 6; startCol++ {
-			var diagonal []string
+			consecutive := []string{}
 			for i := 0; i < 4; i++ {
-				diagonal = append(diagonal, b.Columns[getColumnKey(startCol-i)][startRow+i].Piece)
+				consecutive = append(consecutive, b.Columns[columns[startCol-i]][startRow+i].Piece)
+				if len(consecutive) == 4 && containsWin(consecutive) {
+					return consecutive[0]
+				}
 			}
-			consecutiveDiagonals = append(consecutiveDiagonals, diagonal)
-		}
-	}
-
-	for _, diagonal := range consecutiveDiagonals {
-		if containsWin(diagonal) {
-			return diagonal[0]
 		}
 	}
 
@@ -107,8 +105,8 @@ func (b *Board) WinGame() string {
 }
 
 func (b *Board) EndGame() bool {
-	for _, column := range b.Columns {
-		if !column[5].IsEmpty() {
+	for _, column := range columns {
+		if !b.Columns[column][5].IsEmpty() {
 			return true
 		}
 	}
@@ -125,9 +123,4 @@ func containsWin(consecutive []string) bool {
 		}
 	}
 	return false
-}
-
-func getColumnKey(colIndex int) string {
-	columns := []string{"A", "B", "C", "D", "E", "F", "G"}
-	return columns[colIndex]
 }
