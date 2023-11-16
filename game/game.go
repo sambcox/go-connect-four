@@ -23,36 +23,47 @@ func (g *Game) MainMenu() {
 	fmt.Println("Welcome to Connect Four!")
 	fmt.Println("To play against PC, press c. To play with a friend, press p. To quit, press q.")
 
-	wantToPlay := g.getUserInput()
-	switch wantToPlay {
-	case "c":
-		g.Start()
-	case "p":
-		g.TwoPlayerStart()
-	case "q":
-		g.QuitGame()
-	default:
-		fmt.Println("Invalid input, please press p or q")
-		g.MainMenu()
+	for {
+		wantToPlay := g.getUserInput()
+		switch wantToPlay {
+		case "c":
+			g.Start()
+			return
+		case "p":
+			g.TwoPlayerStart()
+			return
+		case "q":
+			g.QuitGame()
+			return
+		default:
+			fmt.Println("Invalid input, please press p or q")
+		}
 	}
 }
 
-func (g *Game) TwoPlayerStart() {
-	fmt.Println("Please enter player 1 name")
-	player1, err := player.NewPlayer(g.getUserInput())
+func (g *Game) createPlayer(playerNumber int) error {
+	fmt.Printf("Please enter player %d name\n", playerNumber)
+	player, err := player.NewPlayer(g.getUserInput())
 	if err != nil {
-		fmt.Println("Error creating player 1:", err)
-		return
+		return fmt.Errorf("error creating player %d: %w", playerNumber, err)
 	}
-	g.Player1 = player1
+	if playerNumber == 1 {
+		g.Player1 = player
+	} else {
+		g.Player2 = player
+	}
+	return nil
+}
 
-	fmt.Println("Please enter player 2 name")
-	player2, err := player.NewPlayer(g.getUserInput())
-	if err != nil {
-		fmt.Println("Error creating player 2:", err)
+func (g *Game) TwoPlayerStart() {
+	if err := g.createPlayer(1); err != nil {
+		fmt.Println(err)
 		return
 	}
-	g.Player2 = player2
+	if err := g.createPlayer(2); err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	board := board.NewBoard()
 	g.Board = &board
@@ -69,13 +80,17 @@ func (g *Game) Start() {
 	g.GameUserTakeTurn()
 }
 
-func (g *Game) GameUserTakeTurn() {
-	if g.Board.WinGame() != "" {
-		g.OverallWinGame()
+func (g *Game) checkGameStatus() {
+	if winner := g.Board.WinGame(); winner != "" {
+		g.OverallWinGame(winner)
 	} else if g.Board.EndGame() {
 		g.DrawGame()
 	}
 	fmt.Println("--------------------------------")
+}
+
+func (g *Game) GameUserTakeTurn() {
+	g.checkGameStatus()
 	g.Turn.TakeTurn(false)
 	fmt.Println("--------------------------------")
 	g.Board.PrintBoard()
@@ -83,23 +98,14 @@ func (g *Game) GameUserTakeTurn() {
 }
 
 func (g *Game) GamePCTakeTurn() {
-	if g.Board.WinGame() != "" {
-		g.OverallWinGame()
-	} else if g.Board.EndGame() {
-		g.DrawGame()
-	}
-	fmt.Println("--------------------------------")
+	g.checkGameStatus()
 	g.Turn.ComputerTakeTurn()
 	g.Board.PrintBoard()
 	g.GameUserTakeTurn()
 }
 
 func (g *Game) Player1TakeTurn() {
-	if g.Board.WinGame() != "" {
-		g.PlayerWinGame()
-	} else if g.Board.EndGame() {
-		g.DrawGame()
-	}
+	g.checkGameStatus()
 	fmt.Println("--------------------------------")
 	fmt.Printf("%s, your turn\n", g.Player1.Name)
 	fmt.Println("--------------------------------")
@@ -109,11 +115,7 @@ func (g *Game) Player1TakeTurn() {
 }
 
 func (g *Game) Player2TakeTurn() {
-	if g.Board.WinGame() != "" {
-		g.PlayerWinGame()
-	} else if g.Board.EndGame() {
-		g.DrawGame()
-	}
+	g.checkGameStatus()
 	fmt.Println("--------------------------------")
 	fmt.Printf("%s, your turn\n", g.Player2.Name)
 	fmt.Println("--------------------------------")
@@ -144,9 +146,9 @@ func (g *Game) DrawGame() {
 	g.PlayAgain()
 }
 
-func (g *Game) OverallWinGame() {
+func (g *Game) OverallWinGame(winner string) {
 	fmt.Println("--------------------------------")
-	if winner := g.Board.WinGame(); winner == "X" {
+	if winner == "X" {
 		fmt.Println("You've won!")
 	} else if winner == "O" {
 		fmt.Println("You've lost!")
